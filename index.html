@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Balanceamento PRO</title>
+  <meta name="description" content="Módulo de balanceamento dinâmico de rotores em campo — 1 e 2 planos com ISO 1940.">
+  <meta name="theme-color" content="#050810">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+
+<!-- ── HEADER ─────────────────────────────────────────────── -->
+<header class="app-header">
+  <div class="header-top">
+    <div class="logo-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="28" height="28">
+        <defs>
+          <linearGradient id="lbg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1e293b"/>
+            <stop offset="100%" stop-color="#0f172a"/>
+          </linearGradient>
+          <linearGradient id="lacc" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#3b82f6"/>
+            <stop offset="100%" stop-color="#10b981"/>
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" rx="22" fill="url(#lbg)"/>
+        <circle cx="50" cy="50" r="32" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="4 4"/>
+        <line x1="18" y1="50" x2="82" y2="50" stroke="#334155" stroke-width="1.5"/>
+        <line x1="50" y1="18" x2="50" y2="82" stroke="#334155" stroke-width="1.5"/>
+        <circle cx="50" cy="50" r="7" fill="#64748b"/>
+        <circle cx="50" cy="50" r="2.5" fill="#0f172a"/>
+        <path d="M 22 65 Q 35 30 50 60 T 78 55" fill="none" stroke="url(#lacc)" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="50" y1="50" x2="69" y2="31" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="2 2"/>
+        <circle cx="71.5" cy="28.5" r="5.5" fill="#ef4444"/>
+        <circle cx="71.5" cy="28.5" r="2" fill="#1e293b"/>
+      </svg>
+    </div>
+    <h1>Balancea<span class="accent">mento</span></h1>
+    <span class="header-badge">PRO v2</span>
+  </div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="tab-teste" id="tab-btn-teste">
+      <span class="tab-icon">🔬</span> Massa Teste
+    </button>
+    <button class="tab-btn" data-tab="tab-1p" id="tab-btn-1p">
+      <span class="tab-icon">⚡</span> 1 Plano
+    </button>
+    <button class="tab-btn" data-tab="tab-2p" id="tab-btn-2p">
+      <span class="tab-icon">🔄</span> 2 Planos
+    </button>
+  </nav>
+</header>
+
+<main class="app-content" id="main-content">
+
+  <!-- ── TAB: MASSA DE TESTE ──────────────────────────────── -->
+  <section id="tab-teste" class="tab-content active">
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon blue">🔬</div>
+        <div class="section-title">
+          <h2>Cálculo da Massa de Teste</h2>
+          <p>Norma ISO 1940 — Qualidade de Balanceamento</p>
+        </div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-label">
+          <div class="step-num">1</div> Dados do Rotor <div class="step-line"></div>
+        </div>
+        <div class="input-group">
+          <label>Massa do Rotor (M) — kg</label>
+          <input type="number" id="m_rotor" step="any" placeholder="ex: 45.0">
+        </div>
+        <div class="field-row">
+          <div class="input-group">
+            <label>Rotação (n) — RPM</label>
+            <input type="number" id="n_rpm" step="any" placeholder="ex: 1800">
+          </div>
+          <div class="input-group">
+            <label>Raio de Correção (r) — mm</label>
+            <input type="number" id="r_corr" step="any" placeholder="ex: 150">
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Grau ISO 1940 (G)</label>
+          <div class="select-wrapper">
+            <select id="g_iso">
+              <option value="6.3" selected>G 6.3 — Padrão Industrial</option>
+              <option value="2.5">G 2.5 — Turbinas / Bombas Especiais</option>
+              <option value="1.0">G 1.0 — Retíficas de Precisão</option>
+              <option value="16.0">G 16 — Equipamentos Agrícolas</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btn-calc-teste" onclick="calcTrialMass()">
+        ⚡ Calcular Massa de Teste
+      </button>
+
+      <div id="res-teste" class="result-box hidden">
+        <div class="result-label">Resultados ISO 1940</div>
+        <div class="metric-row">
+          <div class="metric-card">
+            <div class="metric-val" id="out_m_res">—</div>
+            <div class="metric-name">Massa Residual Máx. (g)</div>
+          </div>
+          <div class="metric-card" style="border-color: rgba(59,130,246,0.3);">
+            <div class="metric-val" style="color:var(--accent-blue)" id="out_m_sug">—</div>
+            <div class="metric-name">Massa Teste Sugerida (g)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── TAB: 1 PLANO ─────────────────────────────────────── -->
+  <section id="tab-1p" class="tab-content">
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon blue">⚡</div>
+        <div class="section-title">
+          <h2>Balanceamento 1 Plano</h2>
+          <p>Método vetorial com refinos progressivos</p>
+        </div>
+      </div>
+
+      <!-- Step 1: Massa de teste -->
+      <div class="step-block">
+        <div class="step-label"><div class="step-num">1</div> Massa de Teste <div class="step-line"></div></div>
+        <div class="input-group">
+          <label>Massa de Teste (mt) — g</label>
+          <input type="number" id="p1_mt" step="any" placeholder="ex: 25.0">
+        </div>
+        <button class="btn-small" onclick="useCalcMass('p1_mt')" id="btn-use-sug-1p">↩ Usar Massa Calculada</button>
+      </div>
+
+      <!-- Step 2: Vibrações -->
+      <div class="step-block">
+        <div class="step-label"><div class="step-num">2</div> Medições de Vibração <div class="step-line"></div></div>
+        <p class="text-muted mb">Amplitude em mm/s ou µm · Fase em graus (°)</p>
+        <div class="field-row">
+          <div class="input-group">
+            <label>V₀ — Amp. Inicial</label>
+            <input type="number" id="p1_v0_amp" step="any" placeholder="0.0">
+          </div>
+          <div class="input-group">
+            <label>V₀ — Fase (°)</label>
+            <input type="number" id="p1_v0_ang" step="any" placeholder="0">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="input-group">
+            <label>Vr — Amp. c/ Teste</label>
+            <input type="number" id="p1_vr_amp" step="any" placeholder="0.0">
+          </div>
+          <div class="input-group">
+            <label>Vr — Fase (°)</label>
+            <input type="number" id="p1_vr_ang" step="any" placeholder="0">
+          </div>
+        </div>
+      </div>
+
+      <div id="alert-1p" class="alert-box hidden">
+        <span class="alert-icon">⚠️</span>
+        <div><strong>Alerta — Regra dos 30%</strong><br>Variação insuficiente. Aumente a massa de teste ou mude o ângulo de posicionamento.</div>
+      </div>
+
+      <button class="btn-primary" id="btn-calc-1p" onclick="calc1Plane()">⚡ Calcular Correção</button>
+
+      <!-- Results 1P -->
+      <div id="res-1p" class="result-box hidden">
+        <div class="result-label">Correção Principal</div>
+        <div class="highlight-result">
+          <span class="hl-label">Massa de Correção (Mc)</span>
+          <span class="hl-value" id="out_p1_mc">—</span>
+          <span class="hl-sep">@</span>
+          <span class="hl-value" id="out_p1_ang">—</span>
+        </div>
+        <p class="text-muted mt">Remova a massa de teste e instale a massa de correção.</p>
+
+        <!-- Refino 1 -->
+        <div class="refino-section">
+          <button class="btn-secondary" id="btn-show-ref1-1p-container" onclick="showRefino('ref1-1p-container')">
+            + Inserir Vibração Residual (Refino 1)
+          </button>
+          <div id="ref1-1p-container" class="hidden mt">
+            <div class="refino-header">
+              <span class="refino-badge cyan">Refino 1</span>
+              <span class="text-muted">Mantenha as massas anteriores</span>
+            </div>
+            <div class="field-row">
+              <div class="input-group">
+                <label>Vres₁ — Amplitude</label>
+                <input type="number" id="p1_vres1_amp" step="any" placeholder="0.0">
+              </div>
+              <div class="input-group">
+                <label>Vres₁ — Fase (°)</label>
+                <input type="number" id="p1_vres1_ang" step="any" placeholder="0">
+              </div>
+            </div>
+            <button class="btn-ghost mt" onclick="calcRefino1Plane(1)">Calcular Refino 1</button>
+            <div id="res-ref1-1p" class="hidden mt">
+              <div class="highlight-result cyan">
+                <span class="hl-label">Trim 1</span>
+                <span class="hl-value" id="out_p1_trim1">—</span>
+                <span class="hl-sep">@</span>
+                <span class="hl-value" id="out_p1_ang_trim1">—</span>
+              </div>
+              <!-- Refino 2 -->
+              <button class="btn-secondary mt" id="btn-show-ref2-1p-container" onclick="showRefino('ref2-1p-container')">
+                + Inserir Vibração Residual (Refino 2)
+              </button>
+              <div id="ref2-1p-container" class="hidden mt">
+                <div class="refino-header">
+                  <span class="refino-badge purple">Refino 2</span>
+                </div>
+                <div class="field-row">
+                  <div class="input-group">
+                    <label>Vres₂ — Amplitude</label>
+                    <input type="number" id="p1_vres2_amp" step="any" placeholder="0.0">
+                  </div>
+                  <div class="input-group">
+                    <label>Vres₂ — Fase (°)</label>
+                    <input type="number" id="p1_vres2_ang" step="any" placeholder="0">
+                  </div>
+                </div>
+                <button class="btn-ghost mt" onclick="calcRefino1Plane(2)">Calcular Refino 2</button>
+                <div id="res-ref2-1p" class="hidden mt">
+                  <div class="highlight-result purple">
+                    <span class="hl-label">Trim 2</span>
+                    <span class="hl-value" id="out_p1_trim2">—</span>
+                    <span class="hl-sep">@</span>
+                    <span class="hl-value" id="out_p1_ang_trim2">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-container"><canvas id="chart-1p"></canvas></div>
+        <button class="btn-success" onclick="generateReport(1)">📄 Gerar Relatório PDF</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── TAB: 2 PLANOS ────────────────────────────────────── -->
+  <section id="tab-2p" class="tab-content">
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon cyan">🔄</div>
+        <div class="section-title">
+          <h2>Balanceamento 2 Planos</h2>
+          <p>Balanceamento dinâmico com dois planos de correção</p>
+        </div>
+      </div>
+
+      <!-- Step 1: Massas -->
+      <div class="step-block">
+        <div class="step-label"><div class="step-num">1</div> Massas de Teste <div class="step-line"></div></div>
+        <div class="field-row">
+          <div class="input-group">
+            <label>Massa Teste P1 (mt₁) — g</label>
+            <input type="number" id="p2_mt1" step="any" placeholder="ex: 30.0">
+          </div>
+          <div class="input-group">
+            <label>Massa Teste P2 (mt₂) — g</label>
+            <input type="number" id="p2_mt2" step="any" placeholder="ex: 30.0">
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Medições -->
+      <div class="step-block">
+        <div class="step-label"><div class="step-num">2</div> Medições Iniciais — Sem Massa <div class="step-line"></div></div>
+        <div class="field-row">
+          <div class="input-group"><label>M1 Amp.</label><input type="number" id="p2_v10_amp" step="any" placeholder="0.0"></div>
+          <div class="input-group"><label>M1 Fase (°)</label><input type="number" id="p2_v10_ang" step="any" placeholder="0"></div>
+        </div>
+        <div class="field-row">
+          <div class="input-group"><label>M2 Amp.</label><input type="number" id="p2_v20_amp" step="any" placeholder="0.0"></div>
+          <div class="input-group"><label>M2 Fase (°)</label><input type="number" id="p2_v20_ang" step="any" placeholder="0"></div>
+        </div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-label"><div class="step-num">3</div> Ensaio 1 — Massa mt₁ no Plano 1 <div class="step-line"></div></div>
+        <div class="field-row">
+          <div class="input-group"><label>M1 Amp.</label><input type="number" id="p2_v11_amp" step="any" placeholder="0.0"></div>
+          <div class="input-group"><label>M1 Fase (°)</label><input type="number" id="p2_v11_ang" step="any" placeholder="0"></div>
+        </div>
+        <div class="field-row">
+          <div class="input-group"><label>M2 Amp.</label><input type="number" id="p2_v21_amp" step="any" placeholder="0.0"></div>
+          <div class="input-group"><label>M2 Fase (°)</label><input type="number" id="p2_v21_ang" step="any" placeholder="0"></div>
+        </div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-label"><div class="step-num">4</div> Ensaio 2 — Massa mt₂ no Plano 2 <div class="step-line"></div></div>
+        <div class="field-row">
+          <div class="input-group"><label>M1 Amp.</label><input type="number" id="p2_v12_amp" step="any" placeholder="0.0"></div>
+          <div class="input-group"><label>M1 Fase (°)</label><input type="number" id="p2_v12_ang" step="any" placeholder="0"></div>
+        </div>
+        <div class="field-row">
+          <div class="input-group"><label>M2 Amp.</label><input type="number" id="p2_v22_amp" step="any" placeholder="0.0"></div>
+          <div class="input-group"><label>M2 Fase (°)</label><input type="number" id="p2_v22_ang" step="any" placeholder="0"></div>
+        </div>
+      </div>
+
+      <div id="alert-2p" class="alert-box hidden">
+        <span class="alert-icon">⚠️</span>
+        <div><strong>Alerta — Verifique os dados</strong><br>Matriz singular ou variação insuficiente detectada.</div>
+      </div>
+
+      <button class="btn-primary" id="btn-calc-2p" onclick="calc2Planes()">⚡ Calcular Correções</button>
+
+      <!-- Results 2P -->
+      <div id="res-2p" class="result-box hidden">
+        <div class="result-label">Correções Principais</div>
+        <div class="highlight-result blue">
+          <span class="hl-label">Plano 1 (Mc₁)</span>
+          <span class="hl-value" id="out_p2_mc1">—</span>
+          <span class="hl-sep">@</span>
+          <span class="hl-value" id="out_p2_ang1">—</span>
+        </div>
+        <div class="highlight-result cyan" style="margin-top:8px">
+          <span class="hl-label">Plano 2 (Mc₂)</span>
+          <span class="hl-value" id="out_p2_mc2">—</span>
+          <span class="hl-sep">@</span>
+          <span class="hl-value" id="out_p2_ang2">—</span>
+        </div>
+        <p class="text-muted mt">Remova as massas de teste e instale as correções acima.</p>
+
+        <!-- Refino 1 — 2P -->
+        <div class="refino-section">
+          <button class="btn-secondary" id="btn-show-ref1-2p-container" onclick="showRefino('ref1-2p-container')">
+            + Inserir Vibração Residual (Refino 1)
+          </button>
+          <div id="ref1-2p-container" class="hidden mt">
+            <div class="refino-header"><span class="refino-badge cyan">Refino 1</span></div>
+            <div class="field-row">
+              <div class="input-group"><label>M1 Amp.</label><input type="number" id="p2_vres1_1_amp" step="any" placeholder="0.0"></div>
+              <div class="input-group"><label>M1 Fase (°)</label><input type="number" id="p2_vres1_1_ang" step="any" placeholder="0"></div>
+            </div>
+            <div class="field-row">
+              <div class="input-group"><label>M2 Amp.</label><input type="number" id="p2_vres1_2_amp" step="any" placeholder="0.0"></div>
+              <div class="input-group"><label>M2 Fase (°)</label><input type="number" id="p2_vres1_2_ang" step="any" placeholder="0"></div>
+            </div>
+            <button class="btn-ghost mt" onclick="calcRefino2Planes(1)">Calcular Refino 1</button>
+            <div id="res-ref1-2p" class="hidden mt">
+              <div class="highlight-result cyan">
+                <span class="hl-label">Trim P1</span>
+                <span class="hl-value" id="out_p2_trim1_1">—</span>
+                <span class="hl-sep">@</span>
+                <span class="hl-value" id="out_p2_ang_trim1_1">—</span>
+              </div>
+              <div class="highlight-result cyan" style="margin-top:8px">
+                <span class="hl-label">Trim P2</span>
+                <span class="hl-value" id="out_p2_trim1_2">—</span>
+                <span class="hl-sep">@</span>
+                <span class="hl-value" id="out_p2_ang_trim1_2">—</span>
+              </div>
+              <!-- Refino 2 — 2P -->
+              <button class="btn-secondary mt" id="btn-show-ref2-2p-container" onclick="showRefino('ref2-2p-container')">
+                + Inserir Vibração Residual (Refino 2)
+              </button>
+              <div id="ref2-2p-container" class="hidden mt">
+                <div class="refino-header"><span class="refino-badge purple">Refino 2</span></div>
+                <div class="field-row">
+                  <div class="input-group"><label>M1 Amp.</label><input type="number" id="p2_vres2_1_amp" step="any" placeholder="0.0"></div>
+                  <div class="input-group"><label>M2 Fase (°)</label><input type="number" id="p2_vres2_1_ang" step="any" placeholder="0"></div>
+                </div>
+                <div class="field-row">
+                  <div class="input-group"><label>M2 Amp.</label><input type="number" id="p2_vres2_2_amp" step="any" placeholder="0.0"></div>
+                  <div class="input-group"><label>M2 Fase (°)</label><input type="number" id="p2_vres2_2_ang" step="any" placeholder="0"></div>
+                </div>
+                <button class="btn-ghost mt" onclick="calcRefino2Planes(2)">Calcular Refino 2</button>
+                <div id="res-ref2-2p" class="hidden mt">
+                  <div class="highlight-result purple">
+                    <span class="hl-label">Trim P1</span>
+                    <span class="hl-value" id="out_p2_trim2_1">—</span>
+                    <span class="hl-sep">@</span>
+                    <span class="hl-value" id="out_p2_ang_trim2_1">—</span>
+                  </div>
+                  <div class="highlight-result purple" style="margin-top:8px">
+                    <span class="hl-label">Trim P2</span>
+                    <span class="hl-value" id="out_p2_trim2_2">—</span>
+                    <span class="hl-sep">@</span>
+                    <span class="hl-value" id="out_p2_ang_trim2_2">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <canvas id="chart-2p-1"></canvas>
+          <canvas id="chart-2p-2"></canvas>
+        </div>
+        <button class="btn-success" onclick="generateReport(2)">📄 Gerar Relatório PDF</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Hidden PDF template -->
+<div id="print-report-template" style="position:fixed;left:-9999px;top:-9999px;background:white;color:black;padding:20px;font-family:sans-serif;width:800px;">
+  <h1 id="report-title" style="text-align:center;color:#1a237e;margin-bottom:20px;">Relatório de Balanceamento</h1>
+  <div id="report-date" style="text-align:right;font-size:12px;margin-bottom:20px;"></div>
+  <table id="report-table" style="width:100%;border-collapse:collapse;margin-bottom:20px;text-align:center;">
+    <thead style="background:#1a237e;color:white;font-weight:bold;">
+      <tr id="report-thead-tr">
+        <td style="padding:10px;border:1px solid #ccc;">Parâmetro</td>
+        <td style="padding:10px;border:1px solid #ccc;">Dados</td>
+      </tr>
+    </thead>
+    <tbody id="report-tbody"></tbody>
+  </table>
+  <h3 style="text-align:center;margin-top:30px;">Gráficos Vetoriais</h3>
+  <div id="report-charts" style="display:flex;justify-content:space-around;align-items:center;flex-wrap:wrap;"></div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
+</body>
+</html>

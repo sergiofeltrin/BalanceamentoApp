@@ -1,0 +1,17 @@
+{
+    "name": "Balanceamento Dinâmico PRO",
+    "short_name": "Balanceamento",
+    "description": "Módulo de balanceamento dinâmico de rotores em campo — 1 e 2 planos com ISO 1940.",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#050810",
+    "theme_color": "#3b82f6",
+    "icons": [
+        {
+            "src": "icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ]
+}
