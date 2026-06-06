@@ -55,7 +55,10 @@ function showRefino(containerId) {
 function renderCanvasPolar(canvasId, title, v0, vr, vt, corr, refinos=[], trialMassG=0) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
-    const size = 420;
+    // Responsivo: limita ao container disponível
+    const container = canvas.parentElement;
+    const maxW = container ? container.clientWidth - 24 : 420;
+    const size = Math.min(420, Math.max(240, maxW));
     const dpr = window.devicePixelRatio || 1;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
@@ -65,7 +68,8 @@ function renderCanvasPolar(canvasId, title, v0, vr, vt, corr, refinos=[], trialM
     ctx.scale(dpr, dpr);
 
     const cx = size / 2, cy = size / 2;
-    const R = 155, PAD = 36;
+    const R = Math.round(size * 0.369), PAD = Math.round(size * 0.086);
+    const fs = size < 320 ? 9 : (size < 380 ? 11 : 13); // font scale
 
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, size, size);
@@ -98,20 +102,20 @@ function renderCanvasPolar(canvasId, title, v0, vr, vt, corr, refinos=[], trialM
     ctx.stroke();
 
     // Cardinal labels
-    ctx.fillStyle = '#555'; ctx.font = '13px Inter, Arial, sans-serif';
+    ctx.fillStyle = '#555'; ctx.font = `${fs}px Inter, Arial, sans-serif`;
     ctx.textAlign = 'left';   ctx.textBaseline = 'middle'; ctx.fillText('0°',   cx + R + PAD*0.6 + 3, cy);
     ctx.textAlign = 'right';  ctx.textBaseline = 'middle'; ctx.fillText('180°', cx - R - PAD*0.6 - 3, cy);
     ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText('90°',  cx, cy - R - PAD*0.6 - 4);
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';    ctx.fillText('270°', cx, cy + R + PAD*0.6 + 4);
 
     // Scale labels on 0° axis
-    ctx.fillStyle = '#aaa'; ctx.font = '10px Inter, Arial, sans-serif';
+    ctx.fillStyle = '#aaa'; ctx.font = `${fs-3}px Inter, Arial, sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     for (let i = 1; i <= rings; i++)
         ctx.fillText((maxA * i / rings).toFixed(1), cx + R * i / rings, cy + 3);
 
     // Title
-    ctx.fillStyle = '#222'; ctx.font = 'bold 13px Inter, Arial, sans-serif';
+    ctx.fillStyle = '#222'; ctx.font = `bold ${fs}px Inter, Arial, sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText(title, cx, 6);
 
@@ -130,9 +134,9 @@ function renderCanvasPolar(canvasId, title, v0, vr, vt, corr, refinos=[], trialM
         ctx.lineTo(pt.x - h*Math.cos(angle+0.38), pt.y - h*Math.sin(angle+0.38));
         ctx.closePath(); ctx.fill();
         if (label) {
-            const lx = clamp(pt.x + 15*Math.cos(angle), 36, size-36);
+            const lx = clamp(pt.x + 15*Math.cos(angle), Math.round(size*0.09), size-Math.round(size*0.09));
             const ly = clamp(pt.y + 12*Math.sin(angle), 14, size-14);
-            ctx.font = 'bold 10px Inter, Arial, sans-serif';
+            ctx.font = `bold ${fs-3}px Inter, Arial, sans-serif`;
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             const tw = ctx.measureText(label).width;
             ctx.fillStyle = 'rgba(255,255,255,0.88)'; ctx.fillRect(lx-tw/2-3, ly-7, tw+6, 14);
@@ -165,10 +169,10 @@ function renderCanvasPolar(canvasId, title, v0, vr, vt, corr, refinos=[], trialM
         ctx.strokeStyle = '#f59e0b'; ctx.fillStyle = '#f59e0b'; ctx.lineWidth = 2.5;
         ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(pc.x, pc.y); ctx.stroke();
         ctx.beginPath(); ctx.arc(pc.x, pc.y, 8, 0, 2*Math.PI); ctx.fill();
-        const lx = clamp(pc.x + 20*Math.cos(angle), 50, size-50);
+        const lx = clamp(pc.x + 20*Math.cos(angle), Math.round(size*0.12), size-Math.round(size*0.12));
         const ly = clamp(pc.y + 14*Math.sin(angle), 14, size-14);
         const lt = `Mc=${corr.amp.toFixed(1)}g ∠${corr.phase.toFixed(0)}°`;
-        ctx.font = 'bold 10px Inter, Arial, sans-serif';
+        ctx.font = `bold ${fs-3}px Inter, Arial, sans-serif`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         const tw = ctx.measureText(lt).width;
         ctx.fillStyle = 'rgba(255,255,255,0.88)'; ctx.fillRect(lx-tw/2-3, ly-7, tw+6, 14);
@@ -195,13 +199,14 @@ function renderCanvasPolar(canvasId, title, v0, vr, vt, corr, refinos=[], trialM
         { color: '#f59e0b', label: '● Mc — Massa de correção' },
     ];
     refinos.forEach((r, i) => legend.push({ color: rColors[i%2], label: `Vres${i+1} — Residual` }));
-    const legY0 = size - legend.length * 15 - 8;
+    const legStep = size < 320 ? 12 : 15;
+    const legY0 = size - legend.length * legStep - 8;
     legend.forEach((item, idx) => {
-        const ly = legY0 + idx * 15;
-        ctx.fillStyle = item.color; ctx.fillRect(8, ly-4, 14, 8);
-        ctx.fillStyle = '#444'; ctx.font = '9px Inter, Arial, sans-serif';
+        const ly = legY0 + idx * legStep;
+        ctx.fillStyle = item.color; ctx.fillRect(8, ly-4, 12, 8);
+        ctx.fillStyle = '#444'; ctx.font = `${fs-4}px Inter, Arial, sans-serif`;
         ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-        ctx.fillText(item.label, 26, ly);
+        ctx.fillText(item.label, 24, ly);
     });
 }
 

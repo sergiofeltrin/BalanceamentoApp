@@ -377,6 +377,7 @@ h1 .accent {
   display: flex;
   gap: 12px;
   margin-bottom: 0;
+  flex-wrap: wrap;
 }
 
 .input-group {
@@ -602,6 +603,7 @@ input[type="number"]::placeholder {
 
 .highlight-result {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   background: rgba(0,0,0,0.35);
@@ -616,14 +618,17 @@ input[type="number"]::placeholder {
   font-size: 0.82rem;
   color: var(--text-secondary);
   font-weight: 500;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .highlight-result .hl-value {
   font-family: var(--font-mono);
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--accent-green);
   text-shadow: 0 0 12px rgba(16,185,129,0.4);
+  white-space: nowrap;
 }
 
 .highlight-result .hl-sep {
@@ -729,10 +734,17 @@ input[type="number"]::placeholder {
   padding: 12px;
   margin-top: 20px;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   gap: 12px;
   box-shadow: var(--shadow-sm);
+  overflow-x: auto;
+}
+
+.chart-container canvas {
+  max-width: 100%;
+  height: auto !important;
 }
 
 /* ── Divider ────────────────────────────────────────────────── */
@@ -764,9 +776,157 @@ input[type="number"]::placeholder {
 }
 
 /* ── Responsive ─────────────────────────────────────────────── */
-@media (max-width: 480px) {
-  .app-content { padding: 16px 14px; }
-  .card { padding: 18px 16px; }
-  h1 { font-size: 1.2rem; }
-  .metric-row { flex-direction: column; }
+
+/* Tablets pequenos e abaixo */
+@media (max-width: 600px) {
+  .app-content {
+    padding: 14px 12px;
+    max-width: 100%;
+  }
+
+  .card {
+    padding: 16px 14px;
+    border-radius: var(--radius-md);
+  }
+
+  h1 { font-size: 1.15rem; }
+
+  /* Tabs compactas */
+  .tab-btn {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+
+  .header-badge {
+    display: none;
+  }
+
+  /* Campos lado a lado viram coluna única */
+  .field-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .field-row .input-group {
+    margin-bottom: 14px;
+  }
+
+  /* Inputs mais altos para toque */
+  input[type="number"],
+  select {
+    padding: 13px 14px;
+    font-size: 1rem;
+  }
+
+  /* Botões com tamanho mínimo de toque */
+  .btn-primary,
+  .btn-success {
+    padding: 15px 20px;
+    font-size: 0.95rem;
+    min-height: 48px;
+  }
+
+  .btn-secondary {
+    padding: 13px 18px;
+    min-height: 44px;
+  }
+
+  .btn-ghost {
+    padding: 11px 14px;
+    min-height: 44px;
+    width: 100%;
+  }
+
+  .btn-small {
+    padding: 10px 14px;
+    min-height: 40px;
+    width: 100%;
+    font-size: 0.82rem;
+  }
+
+  /* Resultados em coluna */
+  .highlight-result {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 12px 14px;
+  }
+
+  .highlight-result .hl-value {
+    font-size: 1.2rem;
+  }
+
+  .highlight-result .hl-sep {
+    display: none;
+  }
+
+  /* Métricas em coluna */
+  .metric-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .metric-card {
+    padding: 14px;
+  }
+
+  .metric-card .metric-val {
+    font-size: 1.25rem;
+  }
+
+  /* Charts empilhados */
+  .chart-container {
+    flex-direction: column;
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .chart-container canvas {
+    width: 100% !important;
+  }
+
+  /* Section header compacto */
+  .section-header {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .section-title h2 {
+    font-size: 1.05rem;
+  }
+
+  /* Step blocks */
+  .step-block {
+    padding: 14px 12px;
+  }
+
+  /* Refino badges */
+  .refino-section button.btn-secondary {
+    font-size: 0.82rem;
+  }
+
+  /* Alert box */
+  .alert-box {
+    font-size: 0.82rem;
+    padding: 10px 12px;
+  }
+}
+
+/* Telas muito pequenas (< 360px) */
+@media (max-width: 360px) {
+  .app-content { padding: 10px 8px; }
+  .card { padding: 12px 10px; }
+  h1 { font-size: 1rem; }
+  .tab-btn { padding: 8px 10px; font-size: 0.75rem; }
+  .tab-btn .tab-icon { font-size: 0.85rem; }
+
+  input[type="number"],
+  select {
+    font-size: 0.95rem;
+    padding: 12px 10px;
+  }
+
+  .highlight-result .hl-value {
+    font-size: 1.1rem;
+  }
 }
